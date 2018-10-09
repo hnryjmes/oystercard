@@ -68,7 +68,7 @@ describe Oystercard do
   end
 
   it "should start with an empty journey history" do
-    expect(subject.journey_history).to be_empty
+    expect(subject.journeys).to be_empty
   end
 
 
@@ -76,7 +76,7 @@ describe Oystercard do
     subject.top_up(Oystercard::MIN_FARE)
     subject.touch_in(station)
     subject.touch_out(station_2)
-    expect(subject.journey_history).to include journey
+    expect(subject.journeys).to include journey
   end
 
 end

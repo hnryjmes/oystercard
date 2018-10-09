@@ -1,5 +1,5 @@
 class Oystercard
-  attr_reader :balance, :entry_station, :journey_history
+  attr_reader :balance, :entry_station, :journeys
 
   LIMIT = 90
   MIN_FARE = 1
@@ -7,7 +7,7 @@ class Oystercard
   def initialize
     @balance = 0
     @entry_station = nil
-    @journey_history = []
+    @journeys = []
   end
 
   def in_journey?
@@ -27,7 +27,7 @@ class Oystercard
 
   def touch_out(station)
     deduct(MIN_FARE)
-    @journey_history.push({
+    @journeys.push({
       from: @entry_station,
       to: station
       })
