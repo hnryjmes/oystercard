@@ -30,10 +30,7 @@ class Oystercard
 
   def touch_out(station)
     deduct(MIN_FARE)
-    @journeys.push({
-      from: @entry_station,
-      to: station
-      })
+    @journeys.push(Journey.new(@entry_station, station))
     @entry_station = nil
   end
 
