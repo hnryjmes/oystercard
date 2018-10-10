@@ -1,8 +1,8 @@
 require 'oystercard'
 
 describe Oystercard do
-  let (:station) { double :station }
-  let (:station_2) { double :station }
+  let (:entry_station) { double :station }
+  let (:exit_station) { double :station }
 
   describe "#balance" do
     it "should report intial balance as 0" do
@@ -29,18 +29,18 @@ describe Oystercard do
   describe "#touch_in" do
     it "should be able to touch in" do
       subject.top_up(Oystercard::MIN_FARE)
-      subject.touch_in(station)
+      subject.touch_in(entry_station)
       expect(subject).to be_in_journey
     end
 
     it "should not be able to touch in if balance is below the minimum fare" do
-      expect{ subject.touch_in(station) }.to raise_error "Insufficient balance"
+      expect{ subject.touch_in(entry_station) }.to raise_error "Insufficient balance"
     end
 
     it "should remember the entry station" do
       subject.top_up(Oystercard::MIN_FARE)
-      subject.touch_in(station)
-      expect(subject.entry_station).to eq station
+      subject.touch_in(entry_station)
+      expect(subject.entry_station).to eq entry_station
     end
   end
 
@@ -50,24 +50,24 @@ describe Oystercard do
     }
 
     it "should be able to touch out" do
-      subject.touch_in(station)
-      subject.touch_out(station)
+      subject.touch_in(entry_station)
+      subject.touch_out(exit_station)
       expect(subject).not_to be_in_journey
     end
 
     it "should deduct money on touch out" do
-      subject.touch_in(station)
-      expect { subject.touch_out(station) }.to change{ subject.balance }.by(-Oystercard::MIN_FARE)
+      subject.touch_in(entry_station)
+      expect { subject.touch_out(exit_station) }.to change{ subject.balance }.by(-Oystercard::MIN_FARE)
     end
 
     it "should clear the entry station" do
-      subject.touch_in(station)
-      subject.touch_out(station)
+      subject.touch_in(entry_station)
+      subject.touch_out(exit_station)
       expect(subject.entry_station).to be_nil
     end
 
     it "should charge the penalty fare if no entry station" do
-      expect { subject.touch_out(station) }.to change{ subject.balance }.by(-Oystercard::PEN_FARE)
+      expect { subject.touch_out(entry_station) }.to change{ subject.balance }.by(-Oystercard::PEN_FARE)
     end
 
   end
@@ -79,10 +79,10 @@ describe Oystercard do
 
   it "should remember the journey history" do
     subject.top_up(Oystercard::MIN_FARE)
-    subject.touch_in(station)
-    subject.touch_out(station_2)
-    expect(subject.journeys[0].from).to eq station
-    expect(subject.journeys[0].to).to eq station_2
+    subject.touch_in(entry_station)
+    subject.touch_out(exit_station)
+    expect(subject.journeys[0].from).to eq entry_station
+    expect(subject.journeys[0].to).to eq exit_station
   end
 
   describe "#fare" do
