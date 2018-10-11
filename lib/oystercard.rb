@@ -18,6 +18,7 @@ class Oystercard
   end
 
   def touch_in(station)
+    deduct(PENALTY_FARE) if in_journey?
     raise "Insufficient balance" if @balance < MIN_FARE
     log.start(station)
   end
@@ -26,6 +27,10 @@ class Oystercard
     log.finish(station)
     deduct(log.current_journey.fare)
     log.clear_journey
+  end
+
+  def in_journey?
+    !!log.current_journey.entry_station && !log.current_journey.exit_station
   end
 
   private

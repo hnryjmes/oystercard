@@ -6,7 +6,7 @@ describe Oystercard do
 
   let (:entry_station) { double :station }
   let (:exit_station) { double :station }
-  let (:journey) { double(:journey, fare: minimum, entry_station: "aldgate") }
+  let (:journey) { double(:journey, fare: minimum, entry_station: "aldgate", exit_station: "station") }
   let (:log) { double(:log, start: true, finish: true, current_journey: journey, clear_journey: true)}
 
   before { allow(subject).to receive(:log).and_return(log) }
@@ -39,6 +39,13 @@ describe Oystercard do
     it "should not be able to touch in if balance is below the minimum fare" do
       expect{ subject.touch_in(entry_station) }.to raise_error "Insufficient balance"
     end
+
+    it "should deduct penalty fare if touch in twice" do
+      allow(journey).to receive(:exit_station).and_return(nil)
+      subject.top_up(10)
+      expect { subject.touch_in(entry_station) }.to change{ subject.balance }.by(-penalty)
+    end
+
   end
 
   describe "#touch_out" do

@@ -10,10 +10,28 @@ describe Journey do
 
 
   describe "#fare" do
-    it "returns the minimum fare if journey complete" do
-      journey.start(entry_station)
-      journey.finish(exit_station)
-      expect(journey.fare).to eq minimum
+
+    let (:old_street) { double :old_street, zone: 1 }
+    let (:euston) { double :euston, zone: 1 }
+    let (:hampstead) { double :hampstead, zone: 2 }
+    let (:edgware) { double :edgware, zone: 5 }
+
+    it 'returns 2 when travelling across one zone' do
+      journey.start(old_street)
+      journey.finish(hampstead)
+      expect(journey.fare).to eq 2
+    end
+
+    it 'returns 5 when travelling across four zones' do
+      journey.start(old_street)
+      journey.finish(edgware)
+      expect(journey.fare).to eq 5
+    end
+
+    it 'returns 1 when travelling within a zone' do
+      journey.start(old_street)
+      journey.finish(euston)
+      expect(journey.fare).to eq 1
     end
 
     it 'returns penalty fare if no entry_station' do
