@@ -1,8 +1,15 @@
 require 'oystercard'
 
 describe Oystercard do
+  let (:minimum) { Oystercard::MIN_FARE }
+  let (:penalty) { Oystercard::PENALTY_FARE }
+
   let (:entry_station) { double :station }
   let (:exit_station) { double :station }
+  let (:journey) { double(:journey, fare: minimum, entry_station: "aldgate") }
+  let (:log) { double(:log, start: true, finish: true, current_journey: journey, clear_journey: true)}
+
+  before { allow(subject).to receive(:log).and_return(log) }
 
   describe "#balance" do
     it "should report intial balance as 0" do
@@ -22,73 +29,41 @@ describe Oystercard do
     end
   end
 
-  describe "#in_journey" do
-    it { is_expected.not_to be_in_journey }
-  end
-
   describe "#touch_in" do
-    it "should be able to touch in" do
-      subject.top_up(Oystercard::MIN_FARE)
+    it "should call start on log" do
+      expect(log).to receive(:start)
+      subject.top_up(minimum)
       subject.touch_in(entry_station)
-      expect(subject).to be_in_journey
     end
 
     it "should not be able to touch in if balance is below the minimum fare" do
       expect{ subject.touch_in(entry_station) }.to raise_error "Insufficient balance"
     end
-
-    it "should remember the entry station" do
-      subject.top_up(Oystercard::MIN_FARE)
-      subject.touch_in(entry_station)
-      expect(subject.entry_station).to eq entry_station
-    end
   end
 
   describe "#touch_out" do
-    before {
-      subject.top_up(Oystercard::MIN_FARE)
-    }
+    before { subject.top_up(minimum) }
 
-    it "should be able to touch out" do
+    it "should call finish on log" do
+      expect(log).to receive(:finish)
       subject.touch_in(entry_station)
       subject.touch_out(exit_station)
-      expect(subject).not_to be_in_journey
+    end
+
+    it "should call clear_journey on log" do
+      expect(log).to receive(:clear_journey)
+      subject.touch_in(entry_station)
+      subject.touch_out(exit_station)
     end
 
     it "should deduct money on touch out" do
       subject.touch_in(entry_station)
-      expect { subject.touch_out(exit_station) }.to change{ subject.balance }.by(-Oystercard::MIN_FARE)
-    end
-
-    it "should clear the entry station" do
-      subject.touch_in(entry_station)
-      subject.touch_out(exit_station)
-      expect(subject.entry_station).to be_nil
+      expect { subject.touch_out(exit_station) }.to change{ subject.balance }.by(-minimum)
     end
 
     it "should charge the penalty fare if no entry station" do
-      expect { subject.touch_out(entry_station) }.to change{ subject.balance }.by(-Oystercard::PEN_FARE)
-    end
-
-  end
-
-  it "should start with an empty journey history" do
-    expect(subject.journeys).to be_empty
-  end
-
-
-  it "should remember the journey history" do
-    subject.top_up(Oystercard::MIN_FARE)
-    subject.touch_in(entry_station)
-    subject.touch_out(exit_station)
-    expect(subject.journeys[0].from).to eq entry_station
-    expect(subject.journeys[0].to).to eq exit_station
-  end
-
-  describe "#fare" do
-    it "reports the correct fare" do
-      expect(subject.fare).to eq Oystercard::MIN_FARE
+      allow(journey).to receive(:fare).and_return(penalty)
+      expect { subject.touch_out(entry_station) }.to change{ subject.balance }.by(-penalty)
     end
   end
-
 end
